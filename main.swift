@@ -26,12 +26,12 @@ struct Values {
 }
 
 var cryptoList = ["BTC", "ETH"]
-var allCryptoes = ["BTC","ETH","USDC","USDC","BNB"]
-var cryptoPrice = ["test" : [String : Int]()]
+var all = ["AAC","ACX","BTC","ETH","USDC","USDC","BNB"]
+var price = ["test" : [String : Int]()]
 let dateFormatterGet = DateFormatter()
 dateFormatterGet.dateFormat = "yyyy-MM-dd"  
 
-for c in allCryptoes {
+for c in all {
     let strDate = "2022-12-1"
     var date = dateFormatterGet.date(from: strDate)!
     var datePrice = [String : Int]()
@@ -41,15 +41,15 @@ for c in allCryptoes {
         date = Calendar.current.date(byAdding: .day, value: 1, to: date)!
     }
     
-    cryptoPrice[c] = datePrice
+    price[c] = datePrice
 }
 
 
-func coinMenu(coin : String){
-    print("\nYou have selected \(coin).\nEnter start and end date to see prices, input format should be (yyyy-MM-dd)")
-    print("Enter start date:")
+func showcoins(coin : String){
+    print("\nYou have selected \(coin).\ninput format : (yyyy-MM-dd)")
+    print("start:")
     let startDate = readLine()!
-    print("Enter end date:")
+    print("end:")
     let endDate = readLine()!
     
     let dateFormatterGet = DateFormatter()
@@ -60,15 +60,15 @@ func coinMenu(coin : String){
         let end = dateFormatterGet.date(from: endDate)!
 
         let diff = Calendar.current.dateComponents([.day], from: start, to: end).day! + 1
-        print("\nList of prices:")
+        print("\nprices:")
         for _ in 1...diff{
             
-            print("date: "+dateFormatterGet.string(from: start) + "        Price: \(cryptoPrice[coin]![dateFormatterGet.string(from: start)]!)")
+            print("date: "+dateFormatterGet.string(from: start) + "        Price: \(price[coin]![dateFormatterGet.string(from: start)]!)")
             start = Calendar.current.date(byAdding: .day, value: 1, to: start)!
         }
   
     } else if endDate < startDate {
-        print("\nError:start date should be before end date!")
+        print("\nError:start > end!")
     } else {
         print("\nError:invalid dates!")
     }   
@@ -154,10 +154,10 @@ while (!exit){
                         
                         print("Choose a number :\n1.Show all Cryptocurrency\n2.Add Cryptocurrency\n3.Delete Cryptocurrency\n4.Back\n")
                         
-                        let input = readLine()
+                        let str = readLine()
                         for (i, coin) in cryptoList.enumerated(){
-                            if input == cryptoList[i]{
-                                coinMenu(coin : coin)
+                            if str == cryptoList[i]{
+                                showcoins(coin : coin)
                             }
                         }
                     case "2" :
@@ -165,17 +165,17 @@ while (!exit){
                         print("\nAdd : with name.")
                       
                         var count = 0
-                        for coin in allCryptoes {
+                        for coin in all {
                             if !cryptoList.contains(coin){
                                 count += 1
                                 print("\(count).\(coin)")
                             }
                         }
                         
-                        let input = readLine()!
-                        if allCryptoes.contains(input){
-                            cryptoList.append(input)
-                            print("\(input) added to your list.")
+                        let str = readLine()!
+                        if all.contains(str){
+                            cryptoList.append(str)
+                            print("\(str) added to your list.")
                             
                         }
     
@@ -186,14 +186,14 @@ while (!exit){
                         for (i, coin) in cryptoList.enumerated(){
                             print("\(i+1).\(coin)")
                         }
-                        let input = readLine()!
+                        let str = readLine()!
                         
                         for (i, _) in cryptoList.enumerated(){
-                            if input == cryptoList[i]{
-                                if let index = cryptoList.firstIndex(of: input) {
+                            if str == cryptoList[i]{
+                                if let index = cryptoList.firstIndex(of: str) {
                                     cryptoList.remove(at: index)
                                 }
-                                print("\(input) Deleted from your list.")
+                                print("\(str) Deleted from your list.")
                                 
                             }
                         }
