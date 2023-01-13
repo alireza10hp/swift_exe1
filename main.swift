@@ -1,10 +1,11 @@
 import Foundation
-import Glibc
+// import Glibc
 
 
 struct User {
     var name : String = "user";
     var crypto : [Crypto] = [];
+    var coins : [Coin] = [];
     
 }
 
@@ -25,24 +26,76 @@ struct Values {
     var close : Double;
 }
 
-var cryptoList = ["BTC", "ETH"]
-var all = ["AAC","ACX","BTC","ETH","USDC","USDC","BNB"]
-var price = ["test" : [String : Int]()]
-let dateFormatterGet = DateFormatter()
-dateFormatterGet.dateFormat = "yyyy-MM-dd"  
-
-for c in all {
-    let strDate = "2022-12-1"
-    var date = dateFormatterGet.date(from: strDate)!
-    var datePrice = [String : Int]()
-    
-    for _ in 1...30 {
-        datePrice[dateFormatterGet.string(from: date)] = Int.random(in: 100..<10000)
-        date = Calendar.current.date(byAdding: .day, value: 1, to: date)!
+struct FileData: Decodable {
+    var crypto: [Coin];
+    init() {
+        crypto = []
     }
-    
-    price[c] = datePrice
 }
+
+struct Coin: Decodable {
+    var meta : Meta;
+    var values : [Value];
+}
+
+struct Meta: Decodable {
+    var symbol : String;
+    var interval : String;
+    var currency : String;
+    var exchange_timezone : String;
+    var exchange :String ;
+    var mic_code : String;
+    var type : String ;
+}
+
+struct Value: Decodable {
+    var datetime : String;
+    var open : String;
+    var high : String;
+    var low : String;
+    var close : String;
+}
+
+var mainData: FileData = FileData()
+// read json file
+if let path = Bundle.main.path(forResource: "new_data", ofType: "json"){
+    do {
+        print("decoding")
+        let data = try Data(contentsOf: URL(fileURLWithPath: path))
+        let decoder = JSONDecoder()
+        let jsonData = try decoder.decode(FileData.self, from: data)
+        print("file loaded")
+        mainData = jsonData
+    } catch {
+        print("error:", error)
+    }
+}
+
+// var cryptoList = ["BTC", "ETH"]
+// var all = ["AAC","ACX","BTC","ETH","USDC","USDC","BNB"]
+// var price = ["test" : [String : Int]()]
+// let dateFormatterGet = DateFormatter()
+// dateFormatterGet.dateFormat = "yyyy-MM-dd"  
+
+var cryptoDict : [String: [Value]] = [:]
+
+// proccess data
+for (_, element) in mainData.crypto.enumerated() {
+  cryptoDict[element.meta.symbol] = element.values
+}
+
+// for c in all {
+//     let strDate = "2022-12-1"
+//     var date = dateFormatterGet.date(from: strDate)!
+//     var datePrice = [String : Int]()
+    
+//     for _ in 1...30 {
+//         datePrice[dateFormatterGet.string(from: date)] = Int.random(in: 100..<10000)
+//         date = Calendar.current.date(byAdding: .day, value: 1, to: date)!
+//     }
+    
+//     price[c] = datePrice
+// }
 
 
 func showcoins(coin : String){
@@ -63,12 +116,12 @@ func showcoins(coin : String){
         print("\nprices:")
         for _ in 1...diff{
             
-            print("date: "+dateFormatterGet.string(from: start) + "        Price: \(price[coin]![dateFormatterGet.string(from: start)]!)")
+            // print("date: "+dateFormatterGet.string(from: start) + "        Price: \(cryptoDict[coin]![dateFormatterGet.string(from: start)]!)")
             start = Calendar.current.date(byAdding: .day, value: 1, to: start)!
         }
   
     } else if endDate < startDate {
-        print("\nError:start > end!")
+        // print("\nError:start > end!")
     } else {
         print("\nError:invalid dates!")
     }   
@@ -148,55 +201,57 @@ while (!exit){
                         print("List of your cryptocurrencies : ( detail with name)")
                     
                         
-                        for (i, coin) in cryptoList.enumerated(){
-                            print("\(i+1).\(coin)")
+                        var i = 1
+                        for (coin, _) in cryptoDict.enumerated(){
+                            print("\(i).\(coin)")
+                            i = i + 1
                         }
                         
                         print("Choose a number :\n1.Show all Cryptocurrency\n2.Add Cryptocurrency\n3.Delete Cryptocurrency\n4.Back\n")
                         
                         let str = readLine()
-                        for (i, coin) in cryptoList.enumerated(){
-                            if str == cryptoList[i]{
-                                showcoins(coin : coin)
-                            }
-                        }
+                        // for (i, coin) in cryptoList.enumerated(){
+                        //     if str == cryptoList[i]{
+                        //         showcoins(coin : coin)
+                        //     }
+                        // }
                     case "2" :
                         print ("Add Cryptocurrency ")
                         print("\nAdd : with name.")
                       
                         var count = 0
-                        for coin in all {
-                            if !cryptoList.contains(coin){
+                        for coin in cryptoDict {
+                            // if !cryptoList.contains(coin){
                                 count += 1
                                 print("\(count).\(coin)")
-                            }
+                            // }
                         }
                         
                         let str = readLine()!
-                        if all.contains(str){
-                            cryptoList.append(str)
-                            print("\(str) added to your list.")
+                        // if all.contains(str){
+                        //     cryptoList.append(str)
+                        //     print("\(str) added to your list.")
                             
-                        }
+                        // }
     
                         
                     case "3" :
                         print ("Delete Cryptocurrency")
                         print("\nDelete: with name.")
-                        for (i, coin) in cryptoList.enumerated(){
-                            print("\(i+1).\(coin)")
-                        }
+                        // for (i, coin) in cryptoList.enumerated(){
+                        //     print("\(i+1).\(coin)")
+                        // }
                         let str = readLine()!
                         
-                        for (i, _) in cryptoList.enumerated(){
-                            if str == cryptoList[i]{
-                                if let index = cryptoList.firstIndex(of: str) {
-                                    cryptoList.remove(at: index)
-                                }
-                                print("\(str) Deleted from your list.")
+                        // for (i, _) in cryptoList.enumerated(){
+                        //     if str == cryptoList[i]{
+                        //         if let index = cryptoList.firstIndex(of: str) {
+                        //             cryptoList.remove(at: index)
+                        //         }
+                        //         print("\(str) Deleted from your list.")
                                 
-                            }
-                        }
+                        //     }
+                        // }
                     case "4" :
                         back = true
                     default :
