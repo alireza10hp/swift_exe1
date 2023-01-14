@@ -3,9 +3,9 @@ import Foundation
 
 
 struct User {
-    var name : String = "user";
+    var name : String = "default";
     var crypto : [Crypto] = [];
-    var coins : [Coin] = [];
+    var coins : [String] = [];
     
 }
 
@@ -56,15 +56,17 @@ struct Value: Decodable {
     var close : String;
 }
 
+// default user
+var user = User()
+
+// main data loaded from json
 var mainData: FileData = FileData()
 // read json file
 if let path = Bundle.main.path(forResource: "new_data", ofType: "json"){
     do {
-        print("decoding")
         let data = try Data(contentsOf: URL(fileURLWithPath: path))
         let decoder = JSONDecoder()
         let jsonData = try decoder.decode(FileData.self, from: data)
-        print("file loaded")
         mainData = jsonData
     } catch {
         print("error:", error)
@@ -77,11 +79,16 @@ if let path = Bundle.main.path(forResource: "new_data", ofType: "json"){
 // let dateFormatterGet = DateFormatter()
 // dateFormatterGet.dateFormat = "yyyy-MM-dd"  
 
+// serialized data from mainData
 var cryptoDict : [String: [Value]] = [:]
 
-// proccess data
-for (_, element) in mainData.crypto.enumerated() {
+// serialize data
+for (i, element) in mainData.crypto.enumerated() {
   cryptoDict[element.meta.symbol] = element.values
+  // add default coins to user's
+  if i < 3 {
+      user.coins.append(element.meta.symbol)
+  }
 }
 
 // for c in all {
@@ -98,45 +105,48 @@ for (_, element) in mainData.crypto.enumerated() {
 // }
 
 
-func showcoins(coin : String){
-    print("\nYou have selected \(coin).\ninput format : (yyyy-MM-dd)")
-    print("start:")
-    let startDate = readLine()!
-    print("end:")
-    let endDate = readLine()!
-    
-    let dateFormatterGet = DateFormatter()
-    dateFormatterGet.dateFormat = "yyyy-MM-dd"    
-    
-    if dateFormatterGet.date(from: startDate) != nil && dateFormatterGet.date(from: endDate) != nil && endDate >= startDate {
-        var start = dateFormatterGet.date(from: startDate)!
-        let end = dateFormatterGet.date(from: endDate)!
+func showcoin(coin : String){
+    while true {
+        print("\nYou have selected \(coin).\ninput format : (yyyy-MM-dd)")
+        print("start:")
+        let startDate = readLine()!
+        print("end:")
+        let endDate = readLine()!
+        
+        let dateFormatterGet = DateFormatter()
+        dateFormatterGet.dateFormat = "yyyy-MM-dd"    
+        
+        if dateFormatterGet.date(from: startDate) != nil && dateFormatterGet.date(from: endDate) != nil{
+            var start = dateFormatterGet.date(from: startDate)!
+            let end = dateFormatterGet.date(from: endDate)!
 
-        let diff = Calendar.current.dateComponents([.day], from: start, to: end).day! + 1
-        print("\nprices:")
-        for _ in 1...diff{
-            
-            // print("date: "+dateFormatterGet.string(from: start) + "        Price: \(cryptoDict[coin]![dateFormatterGet.string(from: start)]!)")
-            start = Calendar.current.date(byAdding: .day, value: 1, to: start)!
-        }
-  
-    } else if endDate < startDate {
-        // print("\nError:start > end!")
-    } else {
-        print("\nError:invalid dates!")
-    }   
-    
+            if start > end {
+                system("clear")
+                print("ERROR: invalid dates!")
+                print()
+                continue
+            }
+
+            for value in cryptoDict[coin]! {
+                var d = dateFormatterGet.date(from: value.datetime)!
+                if d >= start && d <= end {
+                    print("\(value.datetime): open: \(value.open), high: \(value.high),low: \(value.low), close: \(value.close)")
+                }
+            }
+            return
+        } else {
+            system("clear")
+            print("\nERROR: invalid dates format!")
+            print()
+        }   
+    }
 }
 
-
-//load from json 
-
-var user = User()
 print("Hello !\n " )
 var exit = false
 while (!exit){
 
-    print("Choose a number :\n 1.Profile\n 2.Cryptocurrency\n 3.Exit\n")
+    print("Choose a number :\n   1.Profile\n   2.Cryptocurrency\n   3.Exit\n")
     var str = readLine() 
     system("clear")
 
@@ -146,13 +156,13 @@ while (!exit){
             var back = false
             while(!back){
                 print ("Profile:\n")
-                print ("username :\(user.name) \n")
-                print("Choose a number :\n1.Change profile name\n2.Back\n")
+                print ("username: \(user.name) \n")
+                print("Choose a number :\n   1.Change profile name\n   2.Back\n")
                 str = readLine() 
                 system("clear")
                 switch str {
                     case "1" :
-                        print ("Change profile name :\nplease enter new profile name ")
+                        print ("Change profile name:\nplease enter new profile name ")
                         str = readLine()
                         user.name = str!
                         print ("your profile name changed ! ")
@@ -167,95 +177,82 @@ while (!exit){
            
             var back = false
             while(!back){
-                print ("Cryptocurrency")
-                print("Choose a number :\n1.Show all Cryptocurrency\n2.Add Cryptocurrency\n3.Delete Cryptocurrency\n4.Back\n")
+                print ("Cryptocurrency\n")
+                
+                print("List of your cryptocurrencies:")
+                var i = 1
+                        for coinName in user.coins{
+                            print("\(i).\(coinName): \(cryptoDict[coinName]![0].close)")
+                            i = i + 1
+                        }
+                print()
+                print("Choose a number or Enter crypto name to see details:\n   1.Add Cryptocurrency\n   2.Delete Cryptocurrency\n   3.Back\n")
+
                 str = readLine() 
                 system("clear")
                 
-				//use twelvedata
-				
-				
-                /*
-				let request = NSMutableURLRequest(url: NSURL(string: "https://api.twelvedata.com/time_series?apikey=367baabfd4ca48d7b29801a4d41962d0&interval=5min&symbol=AAX&country=United State,Us&exchange=ACX&outputsize=12&dp=4&start_date=2023-01-01 11:21:00&end_date=2023-01-06 11:21:00&format=CSV")! as URL,
-														cachePolicy: .useProtocolCachePolicy,
-													timeoutInterval: 10.0)
-				request.httpMethod = "GET"
-
-				let session = URLSession.shared
-				let dataTask = session.dataTask(with: request as URLRequest, completionHandler: { (data, response, error) -> Void in
-					if (error != nil) {
-						print(error)
-					} else {
-						let httpResponse = response as? HTTPURLResponse
-						print(httpResponse)
-					}
-				})
-
-				dataTask.resume()    
-                */
-                 
                 switch str {
                     case "1" :
-                        print( "show all crypto")
-                        print("\nCrypto :")
-                        print("List of your cryptocurrencies : ( detail with name)")
-                    
-                        
+                        print ("Add Cryptocurrency ")
+                        // print("\nAdd : with name.")
+                      
                         var i = 1
-                        for (coin, _) in cryptoDict.enumerated(){
-                            print("\(i).\(coin)")
+                        for (coinName, values) in cryptoDict{
+                            if user.coins.contains(coinName) {
+                                continue
+                            }
+                            print("\(i).\(coinName)")
                             i = i + 1
                         }
-                        
-                        print("Choose a number :\n1.Show all Cryptocurrency\n2.Add Cryptocurrency\n3.Delete Cryptocurrency\n4.Back\n")
-                        
-                        let str = readLine()
-                        // for (i, coin) in cryptoList.enumerated(){
-                        //     if str == cryptoList[i]{
-                        //         showcoins(coin : coin)
-                        //     }
-                        // }
-                    case "2" :
-                        print ("Add Cryptocurrency ")
-                        print("\nAdd : with name.")
-                      
-                        var count = 0
-                        for coin in cryptoDict {
-                            // if !cryptoList.contains(coin){
-                                count += 1
-                                print("\(count).\(coin)")
-                            // }
-                        }
-                        
+                        print()
+                        print("Enter Crypto Name:")
                         let str = readLine()!
-                        // if all.contains(str){
-                        //     cryptoList.append(str)
-                        //     print("\(str) added to your list.")
-                            
-                        // }
-    
-                        
-                    case "3" :
+                        system("clear")
+                        let keyExists = cryptoDict[str] != nil
+                        if keyExists{
+                            user.coins.append(str)
+                            print("\(str) added to your list.")
+                        } else {
+                            print("\(str) is not present in the crypto list")
+                        }
+                        print()
+                    case "2" :
                         print ("Delete Cryptocurrency")
                         print("\nDelete: with name.")
-                        // for (i, coin) in cryptoList.enumerated(){
-                        //     print("\(i+1).\(coin)")
-                        // }
+                        var i = 1
+                        for coinName in user.coins{
+                            print("\(i).\(coinName)")
+                            i = i + 1
+                        }
+                        print()
+                        print("Enter Crypto Name:")
                         let str = readLine()!
-                        
-                        // for (i, _) in cryptoList.enumerated(){
-                        //     if str == cryptoList[i]{
-                        //         if let index = cryptoList.firstIndex(of: str) {
-                        //             cryptoList.remove(at: index)
-                        //         }
-                        //         print("\(str) Deleted from your list.")
-                                
-                        //     }
-                        // }
-                    case "4" :
+                        system("clear")
+                        for (i, coinName) in user.coins.enumerated(){
+                            if str == coinName{
+                                user.coins.remove(at: i)                                
+                                print("\(str) Deleted from your list.")
+                                break
+                            }
+                        }
+                        print()
+                    case "3" :
                         back = true
                     default :
-                        print ("Please enter correct number !")
+                    // show selected crypto
+                    if user.coins.contains(str!) {
+                        // show coin
+                        showcoin(coin: str!)
+
+                        //wait for any key to back
+                        print()
+                        print("press Enter to back to menu ...")
+                        readLine()
+                        system("clear")
+                    } else {
+                        print ("Please enter correct number!")
+                        print()
+                    }
                         
                     
                 } 
