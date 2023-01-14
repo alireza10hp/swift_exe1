@@ -1,29 +1,9 @@
 import Foundation
-// import Glibc
-
 
 struct User {
     var name : String = "default";
-    var crypto : [Crypto] = [];
     var coins : [String] = [];
     
-}
-
-struct Crypto {
-    var symbol : String;
-    var currency_base : String;
-    var currency_quote : String;
-    var exchange :String ;
-    var type : String ;
-    var values : [Values];
-}
-
-struct Values {
-    var datetime : String;
-    var open : Double;
-    var high : Double;
-    var low : Double;
-    var close : Double;
 }
 
 struct FileData: Decodable {
@@ -73,12 +53,6 @@ if let path = Bundle.main.path(forResource: "new_data", ofType: "json"){
     }
 }
 
-// var cryptoList = ["BTC", "ETH"]
-// var all = ["AAC","ACX","BTC","ETH","USDC","USDC","BNB"]
-// var price = ["test" : [String : Int]()]
-// let dateFormatterGet = DateFormatter()
-// dateFormatterGet.dateFormat = "yyyy-MM-dd"  
-
 // serialized data from mainData
 var cryptoDict : [String: [Value]] = [:]
 
@@ -91,44 +65,32 @@ for (i, element) in mainData.crypto.enumerated() {
   }
 }
 
-// for c in all {
-//     let strDate = "2022-12-1"
-//     var date = dateFormatterGet.date(from: strDate)!
-//     var datePrice = [String : Int]()
-    
-//     for _ in 1...30 {
-//         datePrice[dateFormatterGet.string(from: date)] = Int.random(in: 100..<10000)
-//         date = Calendar.current.date(byAdding: .day, value: 1, to: date)!
-//     }
-    
-//     price[c] = datePrice
-// }
-
-
+// show a coin with details
 func showcoin(coin : String){
     while true {
-        print("\nYou have selected \(coin).\ninput format : (yyyy-MM-dd)")
-        print("start:")
+        print("\nYou have selected \(coin):\n")
+        print("Enter start date: (yyyy-MM-dd)")
         let startDate = readLine()!
-        print("end:")
+        print("Enter end date: (yyyy-MM-dd)")
         let endDate = readLine()!
         
         let dateFormatterGet = DateFormatter()
         dateFormatterGet.dateFormat = "yyyy-MM-dd"    
         
         if dateFormatterGet.date(from: startDate) != nil && dateFormatterGet.date(from: endDate) != nil{
-            var start = dateFormatterGet.date(from: startDate)!
+            let start = dateFormatterGet.date(from: startDate)!
             let end = dateFormatterGet.date(from: endDate)!
 
             if start > end {
                 system("clear")
-                print("ERROR: invalid dates!")
+                print("ERROR: invalid date!")
                 print()
                 continue
             }
 
+            print("\nPrices of \(coin):")
             for value in cryptoDict[coin]! {
-                var d = dateFormatterGet.date(from: value.datetime)!
+                let d = dateFormatterGet.date(from: value.datetime)!
                 if d >= start && d <= end {
                     print("\(value.datetime): open: \(value.open), high: \(value.high),low: \(value.low), close: \(value.close)")
                 }
@@ -136,49 +98,47 @@ func showcoin(coin : String){
             return
         } else {
             system("clear")
-            print("\nERROR: invalid dates format!")
+            print("\nERROR: invalid date format!")
             print()
         }   
     }
 }
 
+// start app
+system("clear")
 print("Hello !\n " )
 var exit = false
 while (!exit){
-
-    print("Choose a number :\n   1.Profile\n   2.Cryptocurrency\n   3.Exit\n")
+    print("Choose a number: (Enter 0 to back from any page)\n   1.Profile\n   2.Cryptocurrency\n")
     var str = readLine() 
     system("clear")
 
     switch (str){
-        
         case  "1" :
-            var back = false
-            while(!back){
+            while true{    
                 print ("Profile:\n")
-                print ("username: \(user.name) \n")
-                print("Choose a number :\n   1.Change profile name\n   2.Back\n")
-                str = readLine() 
+                print ("Your Username: \(user.name) \n")
+                print ("enter new username: (enter 0 to exit)")
+                str = readLine()!
+                if str == "" {
+                    system("clear")
+                    print("ERROR: please enter valid name!\n")
+                    continue
+                }
+                if str == "0" {
+                    system("clear")
+                    break
+                }
                 system("clear")
-                switch str {
-                    case "1" :
-                        print ("Change profile name:\nplease enter new profile name ")
-                        str = readLine()
-                        user.name = str!
-                        print ("your profile name changed ! ")
-                    case "2" :
-                        back = true
-                    default :
-                        print ("Please enter correct number !")
-                        
-                } 
-            }
+                user.name = str!
+                print ("your profile name changed!\n")        
+            } 
+            
         case  "2" :
            
             var back = false
             while(!back){
                 print ("Cryptocurrency\n")
-                
                 print("List of your cryptocurrencies:")
                 var i = 1
                         for coinName in user.coins{
@@ -186,18 +146,18 @@ while (!exit){
                             i = i + 1
                         }
                 print()
-                print("Choose a number or Enter crypto name to see details:\n   1.Add Cryptocurrency\n   2.Delete Cryptocurrency\n   3.Back\n")
+                print("Choose a number or Enter crypto name to see details:\n   1.Add Cryptocurrency\n   2.Delete Cryptocurrency\n")
 
                 str = readLine() 
                 system("clear")
                 
                 switch str {
                     case "1" :
-                        print ("Add Cryptocurrency ")
-                        // print("\nAdd : with name.")
-                      
+                    while true {
+                        print ("Add Cryptocurrency\n")
+                        print("List of All cryptocurrencies:")
                         var i = 1
-                        for (coinName, values) in cryptoDict{
+                        for (coinName, _) in cryptoDict{
                             if user.coins.contains(coinName) {
                                 continue
                             }
@@ -208,6 +168,9 @@ while (!exit){
                         print("Enter Crypto Name:")
                         let str = readLine()!
                         system("clear")
+                        if str == "0" {
+                            break
+                        }
                         let keyExists = cryptoDict[str] != nil
                         if keyExists{
                             user.coins.append(str)
@@ -216,7 +179,9 @@ while (!exit){
                             print("\(str) is not present in the crypto list")
                         }
                         print()
+                    }
                     case "2" :
+                    while true {
                         print ("Delete Cryptocurrency")
                         print("\nDelete: with name.")
                         var i = 1
@@ -228,6 +193,9 @@ while (!exit){
                         print("Enter Crypto Name:")
                         let str = readLine()!
                         system("clear")
+                        if str == "0" {
+                            break
+                        }
                         for (i, coinName) in user.coins.enumerated(){
                             if str == coinName{
                                 user.coins.remove(at: i)                                
@@ -236,7 +204,8 @@ while (!exit){
                             }
                         }
                         print()
-                    case "3" :
+                    }
+                    case "0" :
                         back = true
                     default :
                     // show selected crypto
@@ -247,7 +216,7 @@ while (!exit){
                         //wait for any key to back
                         print()
                         print("press Enter to back to menu ...")
-                        readLine()
+                        _=readLine()
                         system("clear")
                     } else {
                         print ("Please enter correct number!")
@@ -259,7 +228,7 @@ while (!exit){
             
             }
             
-        case  "3" :
+        case  "0" :
             print("Good bye !")
             exit = true
             
